@@ -73,17 +73,19 @@ bot.dialog('helpDialog', function (session) {
 
 bot.dialog('greetings', [
     // Step 1
-    function (session) {
+    function (session, args, next) {
         if (!session.userData.userID) {
             builder.Prompts.text(session, 'Hi! What is your Employee ID number?');
+        } else {
+            next()         
         }
     },
     // Step 2
     function (session, results) {
-        if (!session.userData.userID) {
+        if (!session.userData.userID) { 
             session.userData.userID = results.response;
         }
-        session.endDialog(`Hello ${results.response}!`);
+        session.endDialog(`Hello ${session.userData.userID}!`);
     }
 ]);
 
