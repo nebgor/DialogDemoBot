@@ -31,7 +31,7 @@ const LuisModelUrl = 'https://' + luisAPIHostName + '/luis/v1/application?id=' +
 // Main dialog with LUIS
 var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] })
-
+.matches('Greeting', 'greetings' )
 .matches('NewIssueTicket', 'ticketDialog' ) //See details at http://docs.botframework.com/builder/node/guides/understanding-natural-language/
 .matches('CloseTicket', 'ticketCloseDialog')
 .matches('ViewIssuedTicket', 'ticketViewDialog')
@@ -74,10 +74,15 @@ bot.dialog('helpDialog', function (session) {
 bot.dialog('greetings', [
     // Step 1
     function (session) {
-        builder.Prompts.text(session, 'Hi! What is your Employee ID number?');
+        if (!session.userData.userID) {
+            builder.Prompts.text(session, 'Hi! What is your Employee ID number?');
+        }
     },
     // Step 2
     function (session, results) {
+        if (!session.userData.userID) {
+            session.userData.userID = results.response;
+        }
         session.endDialog(`Hello ${results.response}!`);
     }
 ]);
@@ -162,6 +167,7 @@ bot.dialog('ticketDialog', [
 
 // Add a global endConversation() action that is bound to the 'Goodbye' intent
 bot.endConversationAction('goodbyeAction', "Ok... See you later.", { matches: 'Goodbye' });
+// bot.beginDialog('greetings');
 
 function showTicket (session, ticketData) {
     // Confirm
