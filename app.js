@@ -1,6 +1,7 @@
 var restify = require('restify');
 var builder = require('botbuilder');
 var moment = require('moment');
+var ticketCard = require('./cards/ticketCard.js');
 
 // Setup Restify Server
 var server = restify.createServer();
@@ -217,6 +218,8 @@ bot.dialog('ticketDialog', [
             contactTime: session.dialogData.contactTime,
             contactNumber: session.dialogData.contactNumber,
             description: session.dialogData.description,
+            userID: session.userData.userID,
+            created: moment().format()
         }
 
         // Process request and display details
@@ -243,75 +246,7 @@ function showTicket (session, ticketData) {
     // Confirm
     session.send('Here is your ticket.');
     // session.send(JSON.stringify(ticketData));
-    var ticketCard = new builder.Message(session)
-                        .addAttachment({
-                            contentType: "application/vnd.microsoft.card.adaptive",
-                            content: {
-                                type: "AdaptiveCard",
-                                speak: "<s>Your ticket about the issue \"Global warming\" <break strength='weak'/> has been created</s><s>The helpdesk will look into it and contact you.</s>",
-                                    body: [
-                                        {
-                                            "type": "TextBlock",
-                                            "text": "Ticket " + ticketData.id,
-                                            "size": "large",
-                                            "weight": "bolder"
-                                        },
-                                        {
-                                            "type": "Container",
-                                            "items": [
-                                                {
-                                                    "type": "TextBlock",
-                                                    "text": "Issue occurred"
-                                                },
-                                                {
-                                                    "type": "TextBlock",
-                                                    "text": moment(ticketData.eventTime).format('h:mm A d/MM/YYYY')
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "type": "TextBlock",
-                                            "text": "We'll call you around"
-                                        },
-                                        {
-                                            "type": "TextBlock",
-                                            "text": moment(ticketData.contactTime).format('h:mm A d/MM/YYYY')
-                                        },                                                
-                                    ],
-                                    "actions": [
-                                        {
-                                            "type": "Action.ShowCard",
-                                            "title": "Change event date",
-                                            "card": {
-                                                "type": "AdaptiveCard",
-                                                "body": [
-                                                    {
-                                                        "type": "Input.Date",
-                                                        "id": "date",
-                                                        "title": "Select new date",
-                                                        "value": moment(ticketData.eventTime).format('YYYY-MM-DD')
-                                                    },
-                                                    {
-                                                        "type": "Input.Time",
-                                                        "id": "time",
-                                                        "title": "Select new time",
-                                                        "value": moment(ticketData.eventTime).format('HH:mm')
-                                                    }
-                                                ],
-                                                "actions": [
-                                                    {
-                                                        "type": "Action.Submit",
-                                                        "title": "Save",
-                                                        "data": { 
-                                                            "type": "editEventDate", 
-                                                            "ticketId": ticketData.id
-                                                        }
-                                                    }
-                                                ]
-                                            }
-                                        }
-                                    ]
-                            }
-                        });
-    session.send(ticketCard);    
+    var cardMessage = new builder.Message(session)
+                        .addAttachment(ticketCard.create(ticketData));
+    session.send(cardMessage);    
 }
