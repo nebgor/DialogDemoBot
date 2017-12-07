@@ -1,4 +1,3 @@
-
 var restify = require('restify');
 var builder = require('botbuilder');
 var moment = require('moment');
@@ -32,16 +31,26 @@ const LuisModelUrl = 'https://' + luisAPIHostName + '/luis/v1/application?id=' +
 // Main dialog with LUIS
 var recognizer = new builder.LuisRecognizer(LuisModelUrl);
 var intents = new builder.IntentDialog({ recognizers: [recognizer] })
-.matches('Greeting', 'greetings' )
-.matches('NewIssueTicket', 'ticketDialog' ) //See details at http://docs.botframework.com/builder/node/guides/understanding-natural-language/
-.matches('CloseTicket', 'ticketCloseDialog')
-.matches('ViewIssuedTicket', 'ticketViewDialog')
+.matches('Bot.Greeting', 'greetings' )
+.matches('Helpdesk.NewTicket', 'ticketDialog' ) //See details at http://docs.botframework.com/builder/node/guides/understanding-natural-language/
+.matches('Helpdesk.CloseTicket', 'ticketCloseDialog')
+.matches('Helpdesk.ViewTicket', 'ticketViewDialog')
+.matches('Helpdesk.ListAllTickets', 'ticketListDialog')
 .onDefault((session, args) => {
     console.log(args)
+    console.log(args.intent)
+    session.send("Top Intent ->" + args.intent)
+    session.send("Intent Score ->" + args.score)
+    args.entities.forEach(entity => {
+        session.send("View -> Entity:" + entity.entity + ", Type: " + entity.type);
+    });    
     session.send('Sorry, I did not understand \'%s\'.', session.message.text);
 });
 
 bot.dialog('/', intents);
+
+
+//Speech https://github.com/Microsoft/BotBuilder-Samples/tree/master/Node/intelligence-SpeechToText
 
 // Install a custom recognizer to look for user saying 'help' or 'goodbye'.
 bot.recognizer({
@@ -93,10 +102,14 @@ bot.dialog('greetings', [
 bot.dialog('ticketCloseDialog', [
     function (session, args) {
         console.log(args)
+        var intent = args.intent;
+
         args.entities.forEach(entity => {
             session.send("Close -> Entity:" + entity.entity + ", Type: " + entity.type);
         });
-        let ticketNumber = args.entities.entities.filter( (entity) => entity.type == "IssueTicketNumber")[0].entity
+
+        let ticketNumber = args.entities.filter( (entity) => entity.type == "IssueTicketNumber")[0].entity
+        // let ticketNumber = builder.EntityRecognizer.findEntity(intent.entities, 'IssueTicketNumber');
 
         let ticketSessionIndex = null        
         let foundTickets = session.userData.tickets.filter( (ticket, index) => {
@@ -107,7 +120,9 @@ bot.dialog('ticketCloseDialog', [
         if (foundTickets) {
             session.userData.tickets = session.userData.tickets.splice(ticketSessionIndex, 1)
             showTicket(session,foundTickets[0])
-            session.send("Ok, ticket is closed");
+            session.send("Ok, ticket is closed and archived in an Egyptian tomb.");
+        } else {
+            session.send("sorry, no such ticket.");
         }
         session.endDialog();
     },
@@ -115,12 +130,36 @@ bot.dialog('ticketCloseDialog', [
 bot.dialog('ticketViewDialog', [
     function (session, args) {
         console.log(args)
+        var intent = args.intent;
+        
         args.entities.forEach(entity => {
             session.send("View -> Entity:" + entity.entity + ", Type: " + entity.type);
         });
+
         let ticketNumber = args.entities.filter( (entity) => entity.type == "IssueTicketNumber")[0].entity
+        // let ticketNumber = builder.EntityRecognizer.findEntity(intent.entities, 'IssueTicketNumber');
+
         let foundTickets = session.userData.tickets.filter( (ticket, index) => ticket.id == ticketNumber )
-        showTicket(session,foundTickets[0])
+        if (foundTickets) {
+            // session.userData.tickets = session.userData.tickets.splice(ticketSessionIndex, 1)
+            showTicket(session,foundTickets[0])
+        } else {
+            session.send("sorry, no such ticket.");
+        }
+        session.endDialog();
+    },
+]);
+bot.dialog('ticketListDialog', [
+    function (session, args) {
+        console.log(args)
+        var intent = args.intent;
+        
+        session.send("Listing all tickets");
+
+        session.userData.tickets.forEach( (ticket) => {
+            showTicket(session,ticket) //@todo change to better summary card?
+
+        })
         session.endDialog();
     },
 ]);
