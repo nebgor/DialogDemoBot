@@ -44,6 +44,13 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] })
     args.entities.forEach(entity => {
         session.send("View -> Entity:" + entity.entity + ", Type: " + entity.type);
     });    
+
+    // Check for card submit actions
+    if (session.message && session.message.value) {
+        processSubmitAction(session, session.message.value);
+        return;
+    }
+
     session.send('Sorry, I did not understand \'%s\'.', session.message.text);
 });
 
@@ -51,6 +58,25 @@ bot.dialog('/', intents);
 
 
 //Speech https://github.com/Microsoft/BotBuilder-Samples/tree/master/Node/intelligence-SpeechToText
+function processSubmitAction(session, value) {
+    var defaultErrorMessage = 'I am an error message';
+    switch (value.type) {
+        case 'editEventDate':
+            var dateTimeObj = moment(value.date + " " + value.time + "Z");
+
+            let foundTickets = session.userData.tickets.filter((ticket, index) => ticket.id == value.ticketId )
+            if (foundTickets.length > 0) {
+                let ticket = foundTickets[0];
+                ticket.eventTime = dateTimeObj.format();
+                showTicket(session, ticket);
+            }
+            break;
+
+        default:
+            // A form data was received, invalid or incomplete since the previous validation did not pass
+            session.send(defaultErrorMessage);
+    }
+}
 
 // Install a custom recognizer to look for user saying 'help' or 'goodbye'.
 bot.recognizer({
@@ -229,12 +255,17 @@ function showTicket (session, ticketData) {
                                             "weight": "bolder"
                                         },
                                         {
-                                            "type": "TextBlock",
-                                            "text": "Issue occurred"
-                                        },
-                                        {
-                                            "type": "TextBlock",
-                                            "text": moment(ticketData.eventTime).format('h:mm A d/MM/YYYY')
+                                            "type": "Container",
+                                            "items": [
+                                                {
+                                                    "type": "TextBlock",
+                                                    "text": "Issue occurred"
+                                                },
+                                                {
+                                                    "type": "TextBlock",
+                                                    "text": moment(ticketData.eventTime).format('h:mm A d/MM/YYYY')
+                                                }
+                                            ]
                                         },
                                         {
                                             "type": "TextBlock",
@@ -247,10 +278,35 @@ function showTicket (session, ticketData) {
                                     ],
                                     "actions": [
                                         {
-                                            "type": "Action.Http",
-                                            "method": "POST",
-                                            "url": "http://foo.com",
-                                            "title": "View"
+                                            "type": "Action.ShowCard",
+                                            "title": "Change event date",
+                                            "card": {
+                                                "type": "AdaptiveCard",
+                                                "body": [
+                                                    {
+                                                        "type": "Input.Date",
+                                                        "id": "date",
+                                                        "title": "Select new date",
+                                                        "value": moment(ticketData.eventTime).format('YYYY-MM-DD')
+                                                    },
+                                                    {
+                                                        "type": "Input.Time",
+                                                        "id": "time",
+                                                        "title": "Select new time",
+                                                        "value": moment(ticketData.eventTime).format('HH:mm')
+                                                    }
+                                                ],
+                                                "actions": [
+                                                    {
+                                                        "type": "Action.Submit",
+                                                        "title": "Save",
+                                                        "data": { 
+                                                            "type": "editEventDate", 
+                                                            "ticketId": ticketData.id
+                                                        }
+                                                    }
+                                                ]
+                                            }
                                         }
                                     ]
                             }
