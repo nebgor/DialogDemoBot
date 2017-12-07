@@ -48,7 +48,7 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] })
         console.log(args.intent)
         session.send("Top Intent ->" + args.intent)
         session.send("Intent Score ->" + args.score)
-        args.entities.forEach(entity => {
+        if (process.env.DEBUG_LUIS) args.entities.forEach(entity => {
             session.send("View -> Entity:" + entity.entity + ", Type: " + entity.type);
         });    
     }
@@ -132,7 +132,7 @@ bot.dialog('ticketCloseDialog', [
         console.log(args)
         var intent = args.intent;
 
-        args.entities.forEach(entity => {
+        if (process.env.DEBUG_LUIS) args.entities.forEach(entity => {
             session.send("Close -> Entity:" + entity.entity + ", Type: " + entity.type);
         });
 
@@ -160,7 +160,7 @@ bot.dialog('ticketViewDialog', [
         console.log(args)
         var intent = args.intent;
         
-        args.entities.forEach(entity => {
+        if (process.env.DEBUG_LUIS) args.entities.forEach(entity => {
             session.send("View -> Entity:" + entity.entity + ", Type: " + entity.type);
         });
 
