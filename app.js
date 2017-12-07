@@ -37,18 +37,20 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] })
 .matches('Helpdesk.ViewTicket', 'ticketViewDialog')
 .matches('Helpdesk.ListAllTickets', 'ticketListDialog')
 .onDefault((session, args) => {
-    console.log(args)
-    console.log(args.intent)
-    session.send("Top Intent ->" + args.intent)
-    session.send("Intent Score ->" + args.score)
-    args.entities.forEach(entity => {
-        session.send("View -> Entity:" + entity.entity + ", Type: " + entity.type);
-    });    
-
+    
     // Check for card submit actions
     if (session.message && session.message.value) {
         processSubmitAction(session, session.message.value);
         return;
+    }
+    else {
+        console.log(args)
+        console.log(args.intent)
+        session.send("Top Intent ->" + args.intent)
+        session.send("Intent Score ->" + args.score)
+        args.entities.forEach(entity => {
+            session.send("View -> Entity:" + entity.entity + ", Type: " + entity.type);
+        });    
     }
 
     session.send('Sorry, I did not understand \'%s\'.', session.message.text);
