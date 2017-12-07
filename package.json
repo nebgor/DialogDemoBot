@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "botbuilder": "^3.8.4",
+    "moment": "^2.19.3",
     "restify": "^5.0.0"
   },
   "devDependencies": {

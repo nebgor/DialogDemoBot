@@ -1,6 +1,7 @@
 
 var restify = require('restify');
 var builder = require('botbuilder');
+var moment = require('moment');
 
 // Setup Restify Server
 var server = restify.createServer();
@@ -194,7 +195,7 @@ function showTicket (session, ticketData) {
                                         },
                                         {
                                             "type": "TextBlock",
-                                            "text": ticketData.eventTime.toString()
+                                            "text": moment(ticketData.eventTime).format('h:mm A d/MM/YYYY')
                                         },
                                         {
                                             "type": "TextBlock",
@@ -202,7 +203,7 @@ function showTicket (session, ticketData) {
                                         },
                                         {
                                             "type": "TextBlock",
-                                            "text": ticketData.contactTime.toString()
+                                            "text": moment(ticketData.contactTime).format('h:mm A d/MM/YYYY')
                                         },                                                
                                     ],
                                     "actions": [
