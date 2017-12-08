@@ -58,6 +58,68 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] })
 
 bot.dialog('/', intents);
 
+// bot.on('conversationUpdate', function (message) { 
+//     if (message.membersAdded) {
+//         message.membersAdded.forEach(function (identity) {
+//             if (identity.id === message.address.bot.id) {
+//                 bot.beginDialog(message.address, 'welcome');
+//             }
+//         });
+//     }
+// })
+bot.on('conversationUpdate', function (message) {
+    console.log(message)
+    //https://github.com/Microsoft/BotFramework-Emulator/issues/99
+    // https://github.com/Microsoft/BotBuilder/issues/159
+    if (message.membersAdded && message.membersAdded.length > 0) {
+        // Say hello
+        // var isGroup = message.address.conversation.isGroup;
+        // var txt = isGroup ? "Hello everyone!" : "Hello, i'm DialogBot.";
+        message.membersAdded.forEach( (identity) => {
+            var txt = "Hello, i'm DialogDemobot.";
+            if (identity.id === message.address.bot.id) {
+                var reply = new builder.Message()
+                        .address(message.address)
+                        .text(txt);
+                bot.send(reply);
+                bot.send(reply.text("How can i help you?"))
+            }
+        });
+    } else if (message.membersRemoved) {
+        // See if bot was removed
+        var botId = message.address.bot.id;
+        for (var i = 0; i < message.membersRemoved.length; i++) {
+            if (message.membersRemoved[i].id === botId) {
+                // Say goodbye
+                var reply = new builder.Message()
+                        .address(message.address)
+                        .text("Goodbye");
+                bot.send(reply);
+                break;
+            }
+        }
+    }
+});
+
+// @todo unused
+bot.dialog('welcome', [
+    // Step 1
+    function (session, args, next) {
+        if (!session.userData.firstRun) {
+            session.userData.firstRun = true;
+            session.send(session, 'Hi! I am DialogDemoBot, at your service!');
+            session.endDialog(session, 'How can i help you?');
+        }
+    }
+]).triggerAction( {
+//     onFindAction: (context, callback) => {
+//         if (!context.userData.firstRun) {
+//             callback(null, 1.1);
+//         } else {
+//             callback(null, 0.0);
+//         }
+//     }
+});
 
 //Speech https://github.com/Microsoft/BotBuilder-Samples/tree/master/Node/intelligence-SpeechToText
 function processSubmitAction(session, value) {
