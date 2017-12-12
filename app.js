@@ -34,8 +34,8 @@ const LuisModelUrlWorkFlows = 'https://' + luisAPIHostName + '/luis/v1/applicati
 
 // Main dialog with LUIS
 var recognizer = new builder.LuisRecognizer(LuisModelUrl);
-// var recognizers = [recognizer];
-var recognizers = [];
+var recognizers = [recognizer];
+// var recognizers = [];
 
 var recognizerWF = new builder.LuisRecognizer(LuisModelUrlWorkFlows)
 .onFilter(function(context, result, callback) {
