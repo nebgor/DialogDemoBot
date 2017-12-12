@@ -3,6 +3,7 @@ var builder = require('botbuilder');
 var BotGraphDialog = require('bot-graph-dialog');
 var moment = require('moment');
 var ticketCard = require('./cards/ticketCard.js');
+let appInsights = require('applicationinsights');
 
 // Setup Restify Server
 var server = restify.createServer();
@@ -20,6 +21,20 @@ var connector = new builder.ChatConnector({
 
 // Listen for messages from users 
 server.post('/api/messages', connector.listen());
+
+appInsights.setup(process.env.BotDevAppInsightsKey)
+.setAutoDependencyCorrelation(true)
+.setAutoCollectRequests(true)
+.setAutoCollectPerformance(true)
+.setAutoCollectExceptions(true)
+.setAutoCollectDependencies(true)
+.setAutoCollectConsole(true,true)
+.setUseDiskRetryCaching(true)
+.start();
+
+appInsights.defaultClient.context.tags["ai.cloud.role"] = "DialogDemoBot" //name this app
+
+
 // consider bot state storage setup here.
 var bot = new builder.UniversalBot(connector);
 
@@ -41,11 +56,16 @@ var recognizerWF = new builder.LuisRecognizer(LuisModelUrlWorkFlows)
 .onFilter(function(context, result, callback) {
     if (result.score <= 0.7) {
         // not confident, log it but don't use the intents.
-        console.log("no scores above 70%")
-        console.log("context:")
-        console.log(context)
-        console.log("result:")
-        console.log(result)
+        appInsights.defaultClient.trackEvent({
+            name: "Unrecognized utterance",
+            properties :
+                {
+                    message: "no scores above 70%",
+                    context: context,
+                    result: result
+                }
+        });
+        
         callback(null, { score: 0.7, intent: 'Root.NotSure' });
     } else
     // Otherwise we pass through the result from LUIS 
@@ -198,7 +218,7 @@ bot.dialog('google', function (session) {
 });
 
 bot.dialog('NotSureDialog', function (session) {
-    session.endDialog("I'm not very (>70%) sure what you meant. The 'notsure' dialog here is to be cont'd ...");
+    session.endDialog("I'm not very (>70%) sure what to do. The 'notsure' dialog here is to be cont'd ...");
 });
 
 bot.dialog('WifiDialog', function (session) {
