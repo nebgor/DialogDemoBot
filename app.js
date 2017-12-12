@@ -1,5 +1,6 @@
 var restify = require('restify');
 var builder = require('botbuilder');
+var BotGraphDialog = require('bot-graph-dialog');
 var moment = require('moment');
 var ticketCard = require('./cards/ticketCard.js');
 
@@ -23,20 +24,48 @@ server.post('/api/messages', connector.listen());
 var bot = new builder.UniversalBot(connector);
 
 // Make sure you add code to validate these fields
+var luisAPIHostName = process.env.LuisAPIHostName || 'westus.api.cognitive.microsoft.com';
 var luisAppId = process.env.LuisAppId;
 var luisAPIKey = process.env.LuisAPIKey;
-var luisAPIHostName = process.env.LuisAPIHostName || 'westus.api.cognitive.microsoft.com';
 
 const LuisModelUrl = 'https://' + luisAPIHostName + '/luis/v1/application?id=' + luisAppId + '&subscription-key=' + luisAPIKey;
+const LuisModelUrlWorkFlows = 'https://' + luisAPIHostName + '/luis/v1/application?id=' + process.env.LuisAppIdWF + '&subscription-key=' + process.env.LuisAPIKeyWF;
+
 
 // Main dialog with LUIS
 var recognizer = new builder.LuisRecognizer(LuisModelUrl);
-var intents = new builder.IntentDialog({ recognizers: [recognizer] })
+// var recognizers = [recognizer];
+var recognizers = [];
+
+var recognizerWF = new builder.LuisRecognizer(LuisModelUrlWorkFlows)
+.onFilter(function(context, result, callback) {
+    if (result.score <= 0.7) {
+        // not confident, log it but don't use the intents.
+        console.log("no scores above 70%")
+        console.log("context:")
+        console.log(context)
+        console.log("result:")
+        console.log(result)
+        callback(null, { score: 0.7, intent: 'Root.NotSure' });
+    } else
+    // Otherwise we pass through the result from LUIS 
+        callback(null, result);
+    }
+);
+// https://github.com/Microsoft/BotBuilder/blob/master/Node/examples/feature-onFilter/app.js
+recognizers.push(recognizerWF)
+
+var intents = new builder.IntentDialog({ recognizers: recognizers })
 .matches('Bot.Greeting', 'greetings' )
 .matches('Helpdesk.NewTicket', 'ticketDialog' ) //See details at http://docs.botframework.com/builder/node/guides/understanding-natural-language/
 .matches('Helpdesk.CloseTicket', 'ticketCloseDialog')
 .matches('Helpdesk.ViewTicket', 'ticketViewDialog')
 .matches('Helpdesk.ListAllTickets', 'ticketListDialog')
+
+.matches('Root.Malware', 'MalwareDialog')
+.matches('Root.Wifi.How.To', 'WifiDialog')
+.matches('Root.NotSure', 'NotSureDialog')
+
 .onDefault((session, args) => {
     
     // Check for card submit actions
@@ -59,15 +88,6 @@ var intents = new builder.IntentDialog({ recognizers: [recognizer] })
 
 bot.dialog('/', intents);
 
-// bot.on('conversationUpdate', function (message) { 
-//     if (message.membersAdded) {
-//         message.membersAdded.forEach(function (identity) {
-//             if (identity.id === message.address.bot.id) {
-//                 bot.beginDialog(message.address, 'welcome');
-//             }
-//         });
-//     }
-// })
 bot.on('conversationUpdate', function (message) {
     console.log(message)
     //https://github.com/Microsoft/BotFramework-Emulator/issues/99
@@ -83,7 +103,7 @@ bot.on('conversationUpdate', function (message) {
                         .address(message.address)
                         .text(txt);
                 bot.send(reply);
-                bot.send(reply.text("How can i help you?"))
+                bot.send(reply.text('How can i help you?'))
             }
         });
     } else if (message.membersRemoved) {
@@ -150,14 +170,15 @@ bot.recognizer({
 
         if (context.message.text) {
             switch (context.message.text.toLowerCase()) {
+                case 'howdoi':
+                    intent = { score: 1.0, intent: 'google' };
+                    break;
                 case 'issue':
                     intent = { score: 1.0, intent: 'Ticket' };
                     break;
-
                 case 'help':
                     intent = { score: 1.0, intent: 'Help' };
                     break;
-                
                 case 'goodbye':
                     intent = { score: 1.0, intent: 'Goodbye' };
                     break;
@@ -171,6 +192,22 @@ bot.recognizer({
 bot.dialog('helpDialog', function (session) {
     session.endDialog("This bot will echo back anything you say.Say 'issue' to mock up a ticket. Say 'goodbye' to quit. Say 'help' to get this.");
 }).triggerAction({ matches: 'Help' });
+
+bot.dialog('google', function (session) {
+    session.endDialog("Here is a link about that: " + 'http://google.com/' );
+});
+
+bot.dialog('NotSureDialog', function (session) {
+    session.endDialog("I'm not very (>70%) sure what you meant. The 'notsure' dialog here is to be cont'd ...");
+});
+
+bot.dialog('WifiDialog', function (session) {
+    session.endDialog("The 'wifi' dialog here is to be cont'd ..." );
+});
+
+bot.dialog('MalwareDialog', function (session) {
+    session.endDialog("The 'malware' dialog here is to be cont'd ..." );
+});
 
 bot.dialog('greetings', [
     // Step 1
