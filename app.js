@@ -21,6 +21,19 @@ var connector = new builder.ChatConnector({
 
 // Listen for messages from users 
 server.post('/api/messages', connector.listen());
+server.get('/', (req, res) => {
+    var fs = require('fs');
+    fs.readFile('./DialogDemoBotIframe.html' , (err, body) => {
+        if (!err) {
+            res.writeHead(200, {
+                'Content-Length': Buffer.byteLength(body),
+                'Content-Type': 'text/html'
+              });
+              res.write(body);
+              res.end(); 
+        }
+    });
+});
 
 server.on('uncaughtException', function (req, res, err, cb) {
     console.log(err);
