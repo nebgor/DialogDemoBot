@@ -218,15 +218,15 @@ bot.dialog('google', function (session) {
 });
 
 bot.dialog('NotSureDialog', function (session) {
-    session.endDialog('I am not sure what you mean but i am still learning. Would you like me to escalate a ticket to level 2 support for you?');
+    session.endDialog("I am not sure what you mean but i am still learning. Would you like me to escalate a ticket to level 2 support for you?");
 });
 
 bot.dialog('WifiDialog', function (session) {
-    session.endDialog('I have identified that you have a wifi issue. Would you like me to help you with this?' );
+    session.endDialog("I have identified that you have a wifi issue. Would you like me to help you with this?");
 });
 
 bot.dialog('MalwareDialog', function (session) {
-    session.endDialog('I have identified that you have a malware or virus issue. Would you like me to help you with this?' );
+    session.endDialog("I have identified that you have a malware or virus issue. Would you like me to help you with this?");
 });
 
 bot.dialog('greetings', [
