@@ -2,6 +2,7 @@ var restify = require('restify');
 var builder = require('botbuilder');
 var moment = require('moment');
 var ticketCard = require('./cards/ticketCard.js');
+let appInsights = require('applicationinsights');
 
 // Setup Restify Server
 var server = restify.createServer();
