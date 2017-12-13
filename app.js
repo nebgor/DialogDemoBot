@@ -78,7 +78,7 @@ var recognizerWF = new builder.LuisRecognizer(LuisModelUrlWorkFlows)
                     result: JSON.stringify(result)
                 }
         });
-        appInsights.defaultClient.trackMetric({name: "Unrecognized utterance metric", value: 1});
+        //  appInsights.defaultClient.trackMetric({name: "Unrecognized utterance metric", value: 1});
         callback(null, { score: 0.7, intent: 'Root.NotSure' });
     } else
     // Otherwise we pass through the result from LUIS 
