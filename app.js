@@ -22,6 +22,19 @@ var connector = new builder.ChatConnector({
 // Listen for messages from users 
 server.post('/api/messages', connector.listen());
 
+server.on('uncaughtException', function (req, res, err, cb) {
+    console.log(err);
+    return cb();
+});
+server.on('InternalServerError', function (req, res, err, cb) {
+    console.log(err);
+    return cb();
+});
+server.on('restifyError', function(req, res, err, cb) {
+    console.log(err);
+    return cb();
+});
+
 appInsights.setup(process.env.BotDevAppInsightsKey)
 .setAutoDependencyCorrelation(true)
 .setAutoCollectRequests(true)
