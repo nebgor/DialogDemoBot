@@ -61,11 +61,11 @@ var recognizerWF = new builder.LuisRecognizer(LuisModelUrlWorkFlows)
             properties :
                 {
                     message: "no scores above 70%",
-                    context: context,
-                    result: result
+                    context: JSON.stringify(context),
+                    result: JSON.stringify(result)
                 }
         });
-        
+        appInsights.defaultClient.trackMetric({name: "Unrecognized utterance metric", value: 1});
         callback(null, { score: 0.7, intent: 'Root.NotSure' });
     } else
     // Otherwise we pass through the result from LUIS 
@@ -218,15 +218,15 @@ bot.dialog('google', function (session) {
 });
 
 bot.dialog('NotSureDialog', function (session) {
-    session.endDialog("I'm not very (>70%) sure what to do. The 'notsure' dialog here is to be cont'd ...");
+    session.endDialog('I am not sure what you mean but i am still learning. Would you like me to escalate a ticket to level 2 support for you?');
 });
 
 bot.dialog('WifiDialog', function (session) {
-    session.endDialog("The 'wifi' dialog here is to be cont'd ..." );
+    session.endDialog('I have identified that you have a wifi issue. Would you like me to help you with this?' );
 });
 
 bot.dialog('MalwareDialog', function (session) {
-    session.endDialog("The 'malware' dialog here is to be cont'd ..." );
+    session.endDialog('I have identified that you have a malware or virus issue. Would you like me to help you with this?' );
 });
 
 bot.dialog('greetings', [
