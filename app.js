@@ -1,6 +1,6 @@
 var restify = require('restify');
 var builder = require('botbuilder');
-var BotGraphDialog = require('bot-graph-dialog');
+// var BotGraphDialog = require('bot-graph-dialog'); -- this was very bad...
 var moment = require('moment');
 var ticketCard = require('./cards/ticketCard.js');
 let appInsights = require('applicationinsights');
