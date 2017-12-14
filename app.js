@@ -3,6 +3,7 @@ var builder = require('botbuilder');
 // var BotGraphDialog = require('bot-graph-dialog'); -- this was very bad...
 var moment = require('moment');
 var ticketCard = require('./cards/ticketCard.js');
+var instructionCard = require('./cards/instructionCard.js');
 let appInsights = require('applicationinsights');
 
 // Setup Restify Server
@@ -390,7 +391,7 @@ bot.dialog('showCard', [
     function (session, args) {
 
         var cardMessage = 
-            new builder.Message(session).addAttachment(ticketCard.create(ticketData));
+            new builder.Message(session).addAttachment(instructionCard.create());
 
         session.send(cardMessage);
 
