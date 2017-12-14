@@ -80,7 +80,7 @@ var recognizers = [recognizer];
 
 var recognizerWF = new builder.LuisRecognizer(LuisModelUrlWorkFlows)
 .onFilter(function(context, result, callback) {
-    if (result.score <= 0.7) {
+    if (result.score <= 0.7 && result.score > 0) {
         // not confident, log it but don't use the intents.
         appInsights.defaultClient.trackEvent({
             name: "Unrecognized utterance",
@@ -202,7 +202,6 @@ function processSubmitAction(session, value) {
                 showTicket(session, ticket);
             }
             break;
-
         default:
             // A form data was received, invalid or incomplete since the previous validation did not pass
             session.send(defaultErrorMessage);
@@ -228,6 +227,8 @@ bot.recognizer({
                 case 'goodbye':
                     intent = { score: 1.0, intent: 'Goodbye' };
                     break;
+                case 'showcard':
+                    intent = { score: 1.0, intent: 'ShowCard' };
             }
         }
         done(null, intent);
@@ -382,6 +383,20 @@ bot.dialog('ticketDialog', [
     }
 
 ]).triggerAction({ matches: 'Ticket' });
+
+// Shortcut for developing cards
+bot.dialog('showCard', [
+    function (session, args) {
+
+        var cardMessage = 
+            new builder.Message(session).addAttachment(ticketCard.create(ticketData));
+
+        session.send(cardMessage);
+
+        session.endDialog();
+
+    },
+]).triggerAction({ matches: 'ShowTicket' });
 
 // Add a global endConversation() action that is bound to the 'Goodbye' intent
 bot.endConversationAction('goodbyeAction', "Ok... See you later.", { matches: 'Goodbye' });
