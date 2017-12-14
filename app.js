@@ -229,6 +229,7 @@ bot.recognizer({
                     break;
                 case 'showcard':
                     intent = { score: 1.0, intent: 'ShowCard' };
+                    break;
             }
         }
         done(null, intent);
@@ -396,7 +397,7 @@ bot.dialog('showCard', [
         session.endDialog();
 
     },
-]).triggerAction({ matches: 'ShowTicket' });
+]).triggerAction({ matches: 'ShowCard' });
 
 // Add a global endConversation() action that is bound to the 'Goodbye' intent
 bot.endConversationAction('goodbyeAction', "Ok... See you later.", { matches: 'Goodbye' });
