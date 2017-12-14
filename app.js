@@ -80,7 +80,7 @@ var recognizers = [recognizer];
 
 var recognizerWF = new builder.LuisRecognizer(LuisModelUrlWorkFlows)
 .onFilter(function(context, result, callback) {
-    if (result.score <= 0.7 && result.score > 0) {
+    if (result.score <= 0.7) {
         // not confident, log it but don't use the intents.
         appInsights.defaultClient.trackEvent({
             name: "Unrecognized utterance",
