@@ -332,9 +332,9 @@ bot.dialog('showCard', [
         cardMessage.speak("Check out this guide to connect to Wi-Fi in a jiffy!");
 
         session.send(cardMessage);
-        //session.say("session.say()", "Check out this guide to connect to Wi-Fi in a jiffy.", cardMessage);
+        // session.say("session.say()", "Check out this guide to connect to Wi-Fi in a jiffy.", cardMessage);
 
-        session.say("Hi how are you", "Hi how are you", { inputHint: builder.InputHint.ignoringInput });
+        // session.say("Hi how are you", "Hi how are you", { inputHint: builder.InputHint.ignoringInput });
 
         session.endDialog();
 
