@@ -333,7 +333,7 @@ bot.dialog('showCard', [
 
         session.send(cardMessage);
         // session.say("session.say()", "Check out this guide to connect to Wi-Fi in a jiffy.", cardMessage);
-
+        
         // session.say("Hi how are you", "Hi how are you", { inputHint: builder.InputHint.ignoringInput });
 
         session.endDialog();
@@ -341,8 +341,31 @@ bot.dialog('showCard', [
     },
 ]).triggerAction({ matches: 'ShowCard' });
 
+bot.dialog('seeYou', (session) => {
+    session.endConversation(
+        {
+            text: 'Have a merry christmas and a happy new year!',
+            speak: '<s>Have a <prosody contour="(0%,+20Hz) (10%,+30%) (40%,+10Hz)">merry christmas</prosody> and a <prosody range="x-low" rate="x-slow" volume="+3dB">happy new year!</prosody></s>'
+        }
+    )
+}).triggerAction({ matches: 'SeeYou' });
+
 // Add a global endConversation() action that is bound to the 'Goodbye' intent
-bot.endConversationAction('goodbyeAction', "Ok... See you later.", { matches: 'Goodbye' });
+bot.endConversationAction('goodbyeAction', 
+    {
+        text: 'Have a merry christmas and a happy new year!',
+        speak: '<s>Have a <prosody contour="(0%,+20Hz) (10%,+30%) (40%,+10Hz)">merry christmas</prosody> and a <prosody range="x-low" rate="x-slow" volume="+3dB">happy new year!</prosody></s>'
+    },
+    {
+        matches: 'Goodbye'
+    }
+);
+
+// speechOptions.speechSynthesizer.speak('<s>Have a <prosody contour="(0%,+20Hz) (10%,+30%) (40%,+10Hz)">merry christmas</prosody> and a <prosody range="x-low" rate="x-slow" volume="+3dB">happy new year!</prosody></s>' , "en-IT");
+// session.say('Have a merry christmas and a happy new year!',
+//     '<s>Have a <prosody contour="(0%,+20Hz) (10%,+30%) (40%,+10Hz)">merry christmas</prosody> and a <prosody range="x-low" rate="x-slow" volume="+3dB">happy new year!</prosody></s>',
+//     { inputHint : builder.InputHint.ignoringInput}
+// );
 // bot.beginDialog('greetings');
 
 function showTicket (session, ticketData) {

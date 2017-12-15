@@ -12,6 +12,10 @@ var recognizer = {
                   case 'issue':
                       intent = { score: 1.0, intent: 'Ticket' };
                       break;
+                  case 'see you':
+                  case 'see you later':
+                        intent = { score: 1.0, intent: 'SeeYou' };
+                        break;                
                   case 'help':
                       intent = { score: 1.0, intent: 'Help' };
                       break;
