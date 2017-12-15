@@ -7,7 +7,7 @@ exports.create = function(ticketData) {
         contentType: "application/vnd.microsoft.card.adaptive",
         content: {
             type: "AdaptiveCard",
-            speak: "<s>Your ticket about the issue \"Global warming\" <break strength='weak'/> has been created</s><s>The helpdesk will look into it and contact you.</s>",
+            speak: "The helpdesk will look into it and contact you.",
                 body: [
                     {
                         "type": "ColumnSet",
