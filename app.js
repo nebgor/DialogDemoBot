@@ -329,11 +329,12 @@ bot.dialog('showCard', [
 
         cardMessage.addAttachment(cardAttachment);
 
-        cardMessage
-        .speak("I'm speaking from the showCard function");
+        cardMessage.speak("Check out this guide to connect to Wi-Fi in a jiffy!");
 
         session.send(cardMessage);
-        session.say(cardMessage);
+        //session.say("session.say()", "Check out this guide to connect to Wi-Fi in a jiffy.", cardMessage);
+
+        session.say("Hi how are you", "Hi how are you", { inputHint: builder.InputHint.ignoringInput });
 
         session.endDialog();
 

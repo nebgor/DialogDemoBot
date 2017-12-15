@@ -1,29 +1,36 @@
-<html>
+<!doctype html>
+<html class="no-js" lang="es-ES">
 <head>
-    <style>
-        body {
-            background:#37939b;
-        }
-        .center {
-            left:25%;
-            width:50%;
-            height:80%;
-            top:10%;
-            background:#EEE;
-            position:absolute;
-        }
-        @media screen and (max-width: 750px) {
-            .center {
-                left:0px;
-                top: 0px;
-                width:100%;
-                height:100%;
-            }
-        }            
-    </style>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>Agent IGOR</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.botframework.com/botframework-webchat/latest/botchat.css" rel="stylesheet" />
 </head>
 
-<iframe class="center"
-    src='https://webchat.botframework.com/embed/DialogDemoBot?s=E9jm8yyaQsY.cwA.rgQ.LRFmV-ui9OuO4jOjlgXBJkPPONEapFVbg7n_kcCykqg'>
-</iframe>
+<body>
+  <div id="bot"/>
+
+  <script src="https://cdn.botframework.com/botframework-webchat/latest/botchat.js"></script>
+  <script src="https://cdn.botframework.com/botframework-webchat/latest/CognitiveServices.js"></script>
+  <script>
+      var speechOptions = {
+          speechRecognizer: new CognitiveServices.SpeechRecognizer( { subscriptionKey: 'f97cf325e5054614aa9bed0fa9cff04b' } ),
+          speechSynthesizer: new CognitiveServices.SpeechSynthesizer(
+              {
+                  subscriptionKey: 'f97cf325e5054614aa9bed0fa9cff04b',
+                  gender: CognitiveServices.SynthesisGender.Male,
+                  voiceName: 'Microsoft Server Speech Text to Speech Voice (es-ES, Laura, Apollo)'
+              })
+      };
+      BotChat.App({
+          directLine: { secret: 'lXRu9cta4cs.cwA.Kzk.a26MLK92lgVYAvAIYIUsK3u0vMDeYMc_ZJlGQdfUVUM' },
+          user: { id: 'cool_dude_91' },
+          bot: { id: 'DialogDemoBot' },
+          resize: 'detect',
+          speechOptions: speechOptions
+      }, document.getElementById("bot"));
+  </script>
+</body>
 </html>
