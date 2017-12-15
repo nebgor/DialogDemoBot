@@ -20,10 +20,12 @@
           speechSynthesizer: new CognitiveServices.SpeechSynthesizer(
               {
                   subscriptionKey: 'f97cf325e5054614aa9bed0fa9cff04b',
-                  gender: CognitiveServices.SynthesisGender.Male,
+                  gender: CognitiveServices.SynthesisGender.Female,
                   voiceName: 'Microsoft Server Speech Text to Speech Voice (en-AU, HayleyRUS)'
+                //   voiceName: 'Microsoft Server Speech Text to Speech Voice (it-IT, PriyaRUS)'
               })
       };
+      speechOptions.speechSynthesizer.speak("Hello, i'm Dialog Demo Bot. How can i help you?" , "en-AU");
       BotChat.App({
           directLine: { secret: 'lXRu9cta4cs.cwA.Kzk.a26MLK92lgVYAvAIYIUsK3u0vMDeYMc_ZJlGQdfUVUM' },
           user: { id: 'cool_dude_91' },
