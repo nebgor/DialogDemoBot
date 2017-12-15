@@ -400,7 +400,11 @@ bot.dialog('showCard', [
 
         cardMessage.addAttachment(cardAttachment);
 
+        cardMessage
+        .speak("I'm speaking from the showCard function");
+
         session.send(cardMessage);
+        session.say(cardMessage);
 
         session.endDialog();
 
