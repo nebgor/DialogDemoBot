@@ -2,9 +2,13 @@ var restify = require('restify');
 var builder = require('botbuilder');
 // var BotGraphDialog = require('bot-graph-dialog'); -- this was very bad...
 var moment = require('moment');
+let appInsights = require('applicationinsights');
+
 var ticketCard = require('./cards/ticketCard.js');
 var instructionCard = require('./cards/instructionCard.js');
-let appInsights = require('applicationinsights');
+
+//@todo make loop from recognizer directory (index.js). also make dialogs referenced from recogs.
+var recogs = require('./recognizers');
 
 // Setup Restify Server
 var server = restify.createServer();
@@ -57,62 +61,25 @@ appInsights.setup(process.env.BotDevAppInsightsKey)
 .setAutoCollectDependencies(true)
 .setAutoCollectConsole(true,true)
 .setUseDiskRetryCaching(true)
-.start();
+// .start();
 
 appInsights.defaultClient.context.tags["ai.cloud.role"] = "DialogDemoBot" //name this app
 
-
 // consider bot state storage setup here.
 var bot = new builder.UniversalBot(connector);
+var defaultRecog = recogs.filter( (r) => r.name == 'default')[0].recognizer;
+bot.recognizer(defaultRecog);
 
-// Make sure you add code to validate these fields
-var luisAPIHostName = process.env.LuisAPIHostName || 'westus.api.cognitive.microsoft.com';
-var luisAppId = process.env.LuisAppId;
-var luisAPIKey = process.env.LuisAPIKey;
-
-const LuisModelUrl = 'https://' + luisAPIHostName + '/luis/v1/application?id=' + luisAppId + '&subscription-key=' + luisAPIKey;
-const LuisModelUrlWorkFlows = 'https://' + luisAPIHostName + '/luis/v1/application?id=' + process.env.LuisAppIdWF + '&subscription-key=' + process.env.LuisAPIKeyWF;
-
-
-// Main dialog with LUIS
-var recognizer = new builder.LuisRecognizer(LuisModelUrl);
-var recognizers = [recognizer];
-// var recognizers = [];
-
-var recognizerWF = new builder.LuisRecognizer(LuisModelUrlWorkFlows)
-.onFilter(function(context, result, callback) {
-    if (result.score <= 0.7) {
-        // not confident, log it but don't use the intents.
-        appInsights.defaultClient.trackEvent({
-            name: "Unrecognized utterance",
-            properties :
-                {
-                    message: "no scores above 70%",
-                    context: JSON.stringify(context),
-                    result: JSON.stringify(result)
-                }
-        });
-        //  appInsights.defaultClient.trackMetric({name: "Unrecognized utterance metric", value: 1});
-        callback(null, { score: 0.7, intent: 'Root.NotSure' });
-    } else
-    // Otherwise we pass through the result from LUIS 
-        callback(null, result);
-    }
-);
-// https://github.com/Microsoft/BotBuilder/blob/master/Node/examples/feature-onFilter/app.js
-recognizers.push(recognizerWF)
-
-var intents = new builder.IntentDialog({ recognizers: recognizers })
-.matches('Bot.Greeting', 'greetings' )
-.matches('Helpdesk.NewTicket', 'ticketDialog' ) //See details at http://docs.botframework.com/builder/node/guides/understanding-natural-language/
-.matches('Helpdesk.CloseTicket', 'ticketCloseDialog')
-.matches('Helpdesk.ViewTicket', 'ticketViewDialog')
-.matches('Helpdesk.ListAllTickets', 'ticketListDialog')
-
-.matches('Root.Malware', 'MalwareDialog')
-.matches('Root.Wifi.How.To', 'WifiDialog')
-.matches('Root.NotSure', 'NotSureDialog')
-
+var LUISrecogs = recogs
+    .filter ((r) => 
+        r.recognizer instanceof builder.LuisRecognizer
+    );
+//add LUIS recognizers
+var intents = new builder.IntentDialog({ 
+    recognizers: LUISrecogs
+        .map( (r) => r.recognizer)
+})
+//@todo refactor handlers?
 .onDefault((session, args) => {
     
     // Check for card submit actions
@@ -132,6 +99,14 @@ var intents = new builder.IntentDialog({ recognizers: recognizers })
 
     session.send('Sorry, I did not understand \'%s\'.', session.message.text);
 });
+
+
+// map Luis intents to our dialogs
+LUISrecogs.map( (r) => {
+    r.intentDialogMap.forEach( (map) => {
+        intents.matches(map.intent, '/' + r.name + '/' + map.dialog)
+    })
+})
 
 bot.dialog('/', intents);
 
@@ -190,52 +165,6 @@ bot.dialog('welcome', [
 });
 
 //Speech https://github.com/Microsoft/BotBuilder-Samples/tree/master/Node/intelligence-SpeechToText
-function processSubmitAction(session, value) {
-    var defaultErrorMessage = 'I am an error message';
-    switch (value.type) {
-        case 'editEventDate':
-            var dateTimeObj = moment(value.date + " " + value.time + "Z");
-
-            let foundTickets = session.userData.tickets.filter((ticket, index) => ticket.id == value.ticketId )
-            if (foundTickets.length > 0) {
-                let ticket = foundTickets[0];
-                ticket.eventTime = dateTimeObj.format();
-                showTicket(session, ticket);
-            }
-            break;
-        default:
-            // A form data was received, invalid or incomplete since the previous validation did not pass
-            session.send(defaultErrorMessage);
-    }
-}
-
-// Install a custom recognizer to look for user saying 'help' or 'goodbye'.
-bot.recognizer({
-  recognize: function (context, done) {
-  var intent = { score: 0.0 };
-
-        if (context.message.text) {
-            switch (context.message.text.toLowerCase()) {
-                case 'howdoi':
-                    intent = { score: 1.0, intent: 'google' };
-                    break;
-                case 'issue':
-                    intent = { score: 1.0, intent: 'Ticket' };
-                    break;
-                case 'help':
-                    intent = { score: 1.0, intent: 'Help' };
-                    break;
-                case 'goodbye':
-                    intent = { score: 1.0, intent: 'Goodbye' };
-                    break;
-                case 'showcard':
-                    intent = { score: 1.0, intent: 'ShowCard' };
-                    break;
-            }
-        }
-        done(null, intent);
-    }
-});
 
 // Add a help dialog with a trigger action that is bound to the 'Help' intent
 bot.dialog('helpDialog', function (session) {
@@ -246,19 +175,19 @@ bot.dialog('google', function (session) {
     session.endDialog("Here is a link about that: " + 'http://google.com/' );
 });
 
-bot.dialog('NotSureDialog', function (session) {
+bot.dialog('/helpdesk/NotSureDialog', function (session) {
     session.endDialog("I am not sure what you mean but i am still learning. Would you like me to escalate a ticket to level 2 support for you?");
 });
 
-bot.dialog('WifiDialog', function (session) {
+bot.dialog('/helpdesk/WifiDialog', function (session) {
     session.endDialog("I have identified that you have a wifi issue. Would you like me to help you with this?");
 });
 
-bot.dialog('MalwareDialog', function (session) {
+bot.dialog('/helpdesk/MalwareDialog', function (session) {
     session.endDialog("I have identified that you have a malware or virus issue. Would you like me to help you with this?");
 });
 
-bot.dialog('greetings', [
+bot.dialog('/ticket/greetings', [
     // Step 1
     function (session, args, next) {
         if (!session.userData.userID) {
@@ -276,7 +205,7 @@ bot.dialog('greetings', [
     }
 ]);
 
-bot.dialog('ticketCloseDialog', [
+bot.dialog('/ticket/ticketCloseDialog', [
     function (session, args) {
         console.log(args)
         var intent = args.intent;
@@ -304,7 +233,7 @@ bot.dialog('ticketCloseDialog', [
         session.endDialog();
     },
 ]);
-bot.dialog('ticketViewDialog', [
+bot.dialog('/ticket/ticketViewDialog', [
     function (session, args) {
         console.log(args)
         var intent = args.intent;
@@ -326,7 +255,7 @@ bot.dialog('ticketViewDialog', [
         session.endDialog();
     },
 ]);
-bot.dialog('ticketListDialog', [
+bot.dialog('/ticket/ticketListDialog', [
     function (session, args) {
         console.log(args)
         var intent = args.intent;
@@ -341,7 +270,7 @@ bot.dialog('ticketListDialog', [
     },
 ]);
 // Add a help dialog with a trigger action that is bound to the 'Help' intent
-bot.dialog('ticketDialog', [
+bot.dialog('/ticket/ticketDialog', [
     function (session) {
         session.send("Let start creating a ticket for you.");
         builder.Prompts.time(session, "When did the problem happen?");
@@ -384,7 +313,7 @@ bot.dialog('ticketDialog', [
         }, 3000);
     }
 
-]).triggerAction({ matches: 'Ticket' });
+]).triggerAction({ matches: 'Ticket' })
 
 // Shortcut for developing cards
 bot.dialog('showCard', [
@@ -411,4 +340,23 @@ function showTicket (session, ticketData) {
     var cardMessage = new builder.Message(session)
                         .addAttachment(ticketCard.create(ticketData));
     session.send(cardMessage);    
+}
+
+function processSubmitAction(session, value) {
+    var defaultErrorMessage = 'I am an error message';
+    switch (value.type) {
+        case 'editEventDate':
+            var dateTimeObj = moment(value.date + " " + value.time + "Z");
+
+            let foundTickets = session.userData.tickets.filter((ticket, index) => ticket.id == value.ticketId )
+            if (foundTickets.length > 0) {
+                let ticket = foundTickets[0];
+                ticket.eventTime = dateTimeObj.format();
+                showTicket(session, ticket);
+            }
+            break;
+        default:
+            // A form data was received, invalid or incomplete since the previous validation did not pass
+            session.send(defaultErrorMessage);
+    }
 }
