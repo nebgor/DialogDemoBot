@@ -180,7 +180,11 @@ bot.dialog('/helpdesk/NotSureDialog', function (session) {
 });
 
 bot.dialog('/helpdesk/WifiDialog', function (session) {
-    session.endDialog("I have identified that you have a wifi issue. Would you like me to help you with this?");
+        session.send("Here's how connect to Wi-Fi:");
+    
+        session.beginDialog('showCard');
+    
+        session.endDialog();
 });
 
 bot.dialog('/helpdesk/MalwareDialog', function (session) {
@@ -319,10 +323,17 @@ bot.dialog('/ticket/ticketDialog', [
 bot.dialog('showCard', [
     function (session, args) {
 
-        var cardMessage = 
-            new builder.Message(session).addAttachment(instructionCard.create());
+        var cardMessage = new builder.Message(session);
+
+        var cardAttachment = instructionCard.create();
+
+        cardMessage.addAttachment(cardAttachment);
+
+        cardMessage
+        .speak("I'm speaking from the showCard function");
 
         session.send(cardMessage);
+        session.say(cardMessage);
 
         session.endDialog();
 
